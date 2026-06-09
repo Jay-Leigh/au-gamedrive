@@ -1,7 +1,7 @@
-## CSV generator for me to test validation
 import hashlib, csv, os
 
 def h(v): return hashlib.sha256(v.strip().lower().encode()).hexdigest()
+os.makedirs("storage_bucket/raw", exist_ok=True)
 
 base_row = {
     "em": h("testuser@example.com"),
@@ -19,7 +19,8 @@ files = {
 }
 
 for fname, row in files.items():
-    with open(fname, "w", newline="") as f:
+    filepath = os.path.join("storage_bucket/raw", fname)
+    with open(filepath, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=row.keys())
         w.writeheader()
         w.writerow(row)

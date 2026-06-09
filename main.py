@@ -10,7 +10,9 @@ from config import settings
 from Services.file_validation import validate_filename
 from Services.audience_processing import process_meta_upload
 from Services.google_ads_processing import process_google_ads_upload
-from Services.audit_logging import is_duplicate_batch, register_batch, get_audit
+from Services.audit_logging import is_duplicate_batch, register_batch, get_audit, checkpoint, Checkpoint
+from Services.storage import save_raw
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -34,8 +36,13 @@ async def upload_audience(
     file: UploadFile = File(...),
     token: str = Depends(verify_token)
 ):
+    # Generate request_id first — needed for all checkpoints
+    request_id = str(uuid.uuid4())
+    checkpoint(request_id, Checkpoint.FILE_RECEIVED, {"filename": file.filename})
+
     # Step 1: Validate Filename
     routing_metadata = validate_filename(file.filename)
+    checkpoint(request_id, Checkpoint.FILENAME_VALIDATED, {"filename": file.filename})
 
     # Step 2: Duplicate batchID check
     if is_duplicate_batch(routing_metadata.account, routing_metadata.batch_id):
@@ -44,12 +51,14 @@ async def upload_audience(
             detail=f"Duplicate batchID '{routing_metadata.batch_id}' for account '{routing_metadata.account}'. Already processed."
         )
 
-    # Step 3: File size + encoding
+    # Step 3: Read + save raw file
     content = await file.read()
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
     csv_str = content.decode("utf-8")
+    raw_path = save_raw(file.filename, content)
+    checkpoint(request_id, Checkpoint.FILE_SAVED, {"path": raw_path})
     reader = csv.DictReader(io.StringIO(csv_str))
 
     # Step 4: Header check
@@ -58,6 +67,8 @@ async def upload_audience(
     for field in required_headers:
         if field not in parsed_headers:
             raise HTTPException(status_code=400, detail=f"Missing required column: {field}")
+        
+    checkpoint(request_id, Checkpoint.HEADERS_VALIDATED, {"headers": parsed_headers})
 
     # Step 5: Spot-check first 5 rows
     sample_rows = []
@@ -72,10 +83,10 @@ async def upload_audience(
             val = row.get(field)
             if val and not settings.sha256_regex.match(val):
                 raise HTTPException(status_code=400, detail=f"Row {index+1}: {field} is not a valid SHA-256 hash")
-
+            
     # Register + hand off
-    request_id = str(uuid.uuid4())
     register_batch(routing_metadata.account, routing_metadata.batch_id, request_id)
+    checkpoint(request_id, Checkpoint.BATCH_REGISTERED, {"batch_id": routing_metadata.batch_id})
     total_rows = max(len(csv_str.splitlines()) - 1, 0)
 
     if routing_metadata.platform == "meta":

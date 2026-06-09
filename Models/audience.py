@@ -1,7 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-class audience:
-    pass
+class Audience(BaseModel):
+    audience_name: str = Field(..., min_length=1)
 
-class audienceFileName(BaseModel):
-    pass
+class AudienceFileName(BaseModel):
+    filename: str
+    account: str
+    audience_name: str
+    platform: str
+    date: str
+    batch_id: str

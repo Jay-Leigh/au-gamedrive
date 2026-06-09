@@ -7,6 +7,3 @@ class RoutingMetadata(BaseModel):
     date: str
     audience_name: str
     batch_id: str
-
-class Audience(BaseModel):
-    pass

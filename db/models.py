@@ -9,5 +9,3 @@ class ApprovedAccount(Base):
     meta_audience_id = Column(String, nullable=True)   # JSONB in Postgres for multiple audiences
     google_customer_id = Column(String, nullable=True)
     google_user_list_id = Column(String, nullable=True)
-
-class 

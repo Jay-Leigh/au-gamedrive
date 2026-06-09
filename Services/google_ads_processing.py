@@ -7,7 +7,8 @@ from datetime import datetime
 from Models.base import RoutingMetadata
 from Models.google_ads import GoogleAdsBatchPayload, UserData, UserIdentifier, Consent
 from Clients.google_ads_client import dispatch_batches_to_google_ads
-from Services.audit_logging import write_audit
+from Services.audit_logging import write_audit, checkpoint, Checkpoint
+from Services.storage import save_processed_csv, save_payload_json
 
 async def process_google_ads_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
     logging.info(f"[{request_id}] Starting Google Ads async processing...")
@@ -44,8 +45,11 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
         valid_operations.append(user_data)
 
     if not valid_operations:
+        checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": 0, "invalid": len(invalid_rows)})
         logging.error(f"[{request_id}] No valid operations for Google Ads. Aborting.")
         return
+    
+    checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": len(valid_operations), "invalid": len(invalid_rows)})
 
     # Step 2: Build the Google Ads Payload
     # Google now requires consent flags, especially for EEA traffic
@@ -56,8 +60,12 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
         consent=Consent(ad_user_data="GRANTED", ad_personalization="GRANTED")
     )
 
-    # Step 3: Dispatch to Google Ads Client
+    checkpoint(request_id, Checkpoint.GOOGLE_PAYLOAD_CREATED, {"operations": len(valid_operations)})
+    save_payload_json(request_id, "google", payload.model_dump())
+
+    checkpoint(request_id, Checkpoint.GOOGLE_DISPATCH_STARTED)
     dispatch_result = await dispatch_batches_to_google_ads(payload, request_id)
+    checkpoint(request_id, Checkpoint.GOOGLE_DISPATCH_COMPLETED)
     
     # Step 4: Write Audit Log (Similar to Meta, simplified here)
     record = {
