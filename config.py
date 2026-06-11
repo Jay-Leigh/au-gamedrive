@@ -1,12 +1,12 @@
 # config.py
-import re
+import re, os
 from typing import Dict
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    system_token: str = "DEFAULT_DEV_TOKEN"  # Obtain System Token
-    meta_access_token: str = ""  # get Uploader Token
+    system_token: str
+    meta_access_token: str = ""
     # Max file size handled by GCP infrastructure — not enforced here
 
     # Pre-approved accounts — will be replaced by PostgreSQL DB lookup in production
