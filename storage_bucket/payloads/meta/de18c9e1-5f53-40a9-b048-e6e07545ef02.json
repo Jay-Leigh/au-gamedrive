@@ -1,0 +1,29 @@
+[
+  {
+    "audience_id": "YOUR_META_AUDIENCE_ID",
+    "session": {
+      "session_id": 1781189525,
+      "batch_seq": 1,
+      "last_batch_flag": true,
+      "estimated_num_total": 1
+    },
+    "payload": {
+      "schema_keys": [
+        "EMAIL",
+        "PHONE",
+        "EXTERN_ID",
+        "FN",
+        "LN"
+      ],
+      "data": [
+        [
+          "a744863d83aefc35f62f9a247025dedfc8964b3c0b39dd794dd3816851fc4a94",
+          "bb7ec47b853642a8aa2559c55103232581738375869de1926f83e12c4f26e6d4",
+          "CRM-001",
+          "96d9632f363564cc3032521409cf22a852f2032eec099ed5967c0d000cec607a",
+          "799ef92a11af918e3fb741df42934f3b568ed2d93ac1df74f1b8d41a27932a6f"
+        ]
+      ]
+    }
+  }
+]

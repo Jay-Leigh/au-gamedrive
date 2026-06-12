@@ -1,0 +1,20 @@
+{
+  "customer_id": "123-456-7890",
+  "user_list_id": "987654321",
+  "operations": [
+    {
+      "user_identifiers": [
+        {
+          "hashed_email": "a744863d83aefc35f62f9a247025dedfc8964b3c0b39dd794dd3816851fc4a94",
+          "hashed_phone_number": "bb7ec47b853642a8aa2559c55103232581738375869de1926f83e12c4f26e6d4",
+          "hashed_first_name": "96d9632f363564cc3032521409cf22a852f2032eec099ed5967c0d000cec607a",
+          "hashed_last_name": "799ef92a11af918e3fb741df42934f3b568ed2d93ac1df74f1b8d41a27932a6f"
+        }
+      ]
+    }
+  ],
+  "consent": {
+    "ad_user_data": "GRANTED",
+    "ad_personalization": "GRANTED"
+  }
+}

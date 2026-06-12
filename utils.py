@@ -1,7 +1,6 @@
 # utils.py
 import re
-from fastapi import HTTPException
-from config import settings
+from exceptions import HashValidationError
 
 SHA256_REGEX = re.compile(r"^[a-f0-9]{64}$")
 
@@ -20,7 +19,5 @@ def spot_check_rows(sample_rows: list[dict]) -> None:
     for index, row in enumerate(sample_rows):
         for field in REQUIRED_HASHED_FIELDS:
             if field in row and not validate_sha256(row[field]):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Row {index + 1}: '{field}' is not a valid SHA-256 hash"
+                raise HashValidationError(f"Row {index + 1}: '{field}' is not a valid SHA-256 hash"
                 )
