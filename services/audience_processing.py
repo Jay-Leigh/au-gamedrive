@@ -1,9 +1,5 @@
 # Services/audience_processing_service.py
-import csv
-import io
-import time
-import json
-import logging
+import csv, io, time, json, logging
 from datetime import datetime
 from config import settings
 from models.base import RoutingMetadata

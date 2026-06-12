@@ -46,3 +46,8 @@ def checkpoint(request_id: str, stage: str, details: dict | None = None):
         "stage": stage,
         "details": details or {}
     })
+
+def reset_audit_state():
+    """Test-only helper. Clears in-memory stores between test runs."""
+    _audit_store.clear()
+    _batch_registry.clear()

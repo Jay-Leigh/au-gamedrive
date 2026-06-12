@@ -1,7 +1,5 @@
 # Services/google_ads_processing_service.py
-import csv
-import io
-import logging
+import csv, io, logging
 from config import settings
 from datetime import datetime
 from models.base import RoutingMetadata

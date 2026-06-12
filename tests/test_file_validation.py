@@ -1,0 +1,48 @@
+import pytest
+from services.file_validation import validate_filename
+from exceptions import FilenameValidationError
+
+def test_valid_meta_filename():
+    result = validate_filename("realbeds_QualifiedLead_meta_20260526_001.csv")
+    assert result.account == "realbeds"
+    assert result.audience_name == "QualifiedLead"
+    assert result.platform == "meta"
+    assert result.date == "20260526"
+    assert result.batch_id == "001"
+
+def test_valid_google_filename():
+    result = validate_filename("realbeds_QualifiedLead_googleads_20260526_001.csv")
+    assert result.platform == "googleads"
+
+def test_wrong_part_count_raises():
+    with pytest.raises(FilenameValidationError, match="exactly 5 parts"):
+        validate_filename("too_few_parts.csv")
+
+def test_unknown_account_raises():
+    with pytest.raises(FilenameValidationError, match="Unknown account"):
+        validate_filename("fakeclient_Lead_meta_20260526_001.csv")
+
+def test_empty_eventname_raises():
+    with pytest.raises(FilenameValidationError, match="cannot be empty"):
+        validate_filename("realbeds__meta_20260526_001.csv")
+
+def test_invalid_platform_raises():
+    with pytest.raises(FilenameValidationError, match="Invalid platform"):
+        validate_filename("realbeds_Lead_tiktok_20260526_001.csv")
+
+def test_bad_date_format_raises():
+    with pytest.raises(FilenameValidationError, match="YYYYMMDD"):
+        validate_filename("realbeds_Lead_meta_2026-05-26_001.csv")
+
+def test_non_numeric_batch_id_raises():
+    with pytest.raises(FilenameValidationError, match="batchID must be numeric"):
+        validate_filename("realbeds_Lead_meta_20260526_abc.csv")
+
+def test_six_parts_raises():
+    with pytest.raises(FilenameValidationError, match="exactly 5 parts"):
+        validate_filename("realbeds_Lead_extra_meta_20260526_001.csv")
+
+def test_all_approved_accounts_pass():
+    for account in ["realbeds", "realbeds1", "africanoverlandtours"]:
+        result = validate_filename(f"{account}_Lead_meta_20260526_001.csv")
+        assert result.account == account
