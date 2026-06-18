@@ -1,0 +1,22 @@
+# Environment
+venv/
+.env
+__pycache__/
+*.pyc
+
+# Database
+*.db
+
+# Storage (runtime artifacts, not source)
+storage_bucket/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log

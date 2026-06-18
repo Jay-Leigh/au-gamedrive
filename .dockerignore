@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.git/
+.gitignore
+.vscode/
+.idea/
+test_csvs/
+verify_hashing.py
+generate_test_csvs.py
