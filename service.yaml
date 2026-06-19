@@ -1,0 +1,28 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: audience-uploader-service
+spec:
+  template:
+    metadata:
+      labels:
+        service-type: "audience-uploader-service"
+      annotations:
+        deployment-timestamp: "0"
+        autoscaling.knative.dev/maxScale: '1'
+    spec:
+      containers:
+        - image: africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SYSTEM_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: SYSTEM_TOKEN
+                  key: 'latest'
+            - name: META_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: META_ACCESS_TOKEN
+                  key: 'latest'

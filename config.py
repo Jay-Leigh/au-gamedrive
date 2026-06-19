@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     # Filename convention: accountname_CustomAudienceName_platform_YYYYMMDD_batchID.csv
 
     sha256_regex: re.Pattern = re.compile(r"^[a-f0-9]{64}$")
+    supported_platforms: list[str] = ["meta", "googleads"]
 
     class Config:
         env_file = ".env"
