@@ -3,13 +3,13 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader:$SHORT_SHA'
+      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
       - '.'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader:$SHORT_SHA'
+      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
@@ -17,9 +17,9 @@ steps:
       - 'run'
       - 'services'
       - 'update'
-      - 'audience-uploader-service'
-      - '--image=africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader:$SHORT_SHA'
+      - 'audience-sync-api'
+      - '--image=africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
       - '--region=africa-south1'
 
 images:
-  - 'africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader:$SHORT_SHA'
+  - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'

@@ -1,18 +1,18 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: audience-uploader-service
+  name: audience-sync-api
 spec:
   template:
     metadata:
       labels:
-        service-type: "audience-uploader-service"
+        service-type: "audience-sync-api"
       annotations:
         deployment-timestamp: "0"
         autoscaling.knative.dev/maxScale: '1'
     spec:
       containers:
-        - image: africa-south1-docker.pkg.dev/cs-internal-tool-apps/audienceuploader/audience-uploader
+        - image: africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api
           ports:
             - containerPort: 8000
           env:
