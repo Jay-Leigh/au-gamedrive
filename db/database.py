@@ -2,7 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# SQLite for local dev — swap this URL for PostgreSQL in production
+# SQLite/Algchemy for local dev — swap this URL for PostgreSQL in production
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_audience_uploader.db"
 
 engine = create_engine(
