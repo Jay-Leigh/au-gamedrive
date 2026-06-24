@@ -30,7 +30,7 @@ async def upload_audience(
     file: UploadFile = File(...),
     token: str = Depends(verify_token),
 ):
-    request_id = str(uuid.uuid4())
+    request_id = str(uuid.uuid4()) ## can change name to job_id
     checkpoint(request_id, Checkpoint.FILE_RECEIVED, {"filename": file.filename})
 
     # Step 1: Validate Filename (raises FilenameValidationError)
@@ -43,17 +43,14 @@ async def upload_audience(
             f"Duplicate batchID '{routing_metadata.batch_id}' for account '{routing_metadata.account}'. Already processed."
         )
 
-    # Step 3: Read + save raw file
+    # Step 3: Read + validate headers
     content = await file.read()
     if len(content) == 0:
         raise EmptyFileError("Uploaded file is empty")
 
     csv_str = content.decode("utf-8")
-    raw_path = save_raw(file.filename, content)
-    checkpoint(request_id, Checkpoint.FILE_SAVED, {"path": raw_path})
     reader = csv.DictReader(io.StringIO(csv_str))
 
-    # Step 4: Header check
     parsed_headers = reader.fieldnames or []
     required_headers = ["em", "ph", "external_id", "event_name", "event_time"]
     for field in required_headers:
@@ -61,6 +58,10 @@ async def upload_audience(
             raise SchemaValidationError(f"Missing required column: {field}")
 
     checkpoint(request_id, Checkpoint.HEADERS_VALIDATED, {"headers": parsed_headers})
+
+    # Step 4: Save raw file (only after validation passes)
+    raw_path = save_raw(file.filename, content)
+    checkpoint(request_id, Checkpoint.FILE_SAVED, {"path": raw_path})
 
     # Step 5: Spot-check first 5 rows (raises HashValidationError)
     sample_rows = []
