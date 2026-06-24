@@ -8,9 +8,10 @@ class MetaSession(BaseModel):
     estimated_num_total: int
 
 class MetaPayloadData(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
     schema_keys: List[str] = Field(alias="schema")
     data: List[List[Any]]
+    model_config = ConfigDict(populate_by_name=True) ## config at top
+
 
 class MetaBatchPayload(BaseModel):
     audience_id: str
