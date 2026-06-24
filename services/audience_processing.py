@@ -110,13 +110,13 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
                 payload=MetaPayloadData(**{"schema": schema, "data": batch})
         ))
     
-    checkpoint(request_id, Checkpoint.META_PAYLOAD_CREATED, {"batches": len(payloads)})
+    checkpoint(request_id, Checkpoint.PAYLOAD_CREATED, {"platform": "meta", "batches": len(payloads)})
     save_payload_json(request_id, "meta", [p.model_dump() for p in payloads])
 
     # Step 7: Dispatch to Meta
-    checkpoint(request_id, Checkpoint.META_DISPATCH_STARTED)
+    checkpoint(request_id, Checkpoint.DISPATCH_STARTED, {"platform": "meta"})
     dispatch_results = await dispatch_batches_to_meta(payloads, settings.meta_access_token, request_id)
-    checkpoint(request_id, Checkpoint.META_DISPATCH_COMPLETED)
+    checkpoint(request_id, Checkpoint.DISPATCH_COMPLETED, {"platform": "meta"})
     
     # Determine overall status
     failed_count = sum(1 for r in dispatch_results if r.get("error"))

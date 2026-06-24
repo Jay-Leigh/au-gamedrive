@@ -5,17 +5,14 @@ from enum import Enum
 
 class Checkpoint(str, Enum):
     FILE_RECEIVED       = "file_received"
-    FILE_SAVED          = "file_saved"
     FILENAME_VALIDATED  = "filename_validated"
     HEADERS_VALIDATED   = "headers_validated"
+    FILE_SAVED          = "file_saved"
     BATCH_REGISTERED    = "batch_registered"
     ROWS_VALIDATED      = "rows_validated"
-    META_PAYLOAD_CREATED    = "meta_payload_created"
-    META_DISPATCH_STARTED   = "meta_dispatch_started"
-    META_DISPATCH_COMPLETED = "meta_dispatch_completed"
-    GOOGLE_PAYLOAD_CREATED    = "google_payload_created"
-    GOOGLE_DISPATCH_STARTED   = "google_dispatch_started"
-    GOOGLE_DISPATCH_COMPLETED = "google_dispatch_completed"
+    PAYLOAD_CREATED     = "payload_created"
+    DISPATCH_STARTED    = "dispatch_started"
+    DISPATCH_COMPLETED  = "dispatch_completed"
 
 _audit_store: Dict[str, dict] = {}       # request_id → audit record
 _batch_registry: Dict[str, str] = {}     # "account_batchID" → request_id

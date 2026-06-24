@@ -58,12 +58,12 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
         consent=Consent(ad_user_data="GRANTED", ad_personalization="GRANTED")
     )
 
-    checkpoint(request_id, Checkpoint.GOOGLE_PAYLOAD_CREATED, {"operations": len(valid_operations)})
+    checkpoint(request_id, Checkpoint.PAYLOAD_CREATED, {"platform": "googleads", "batches": len(valid_operations)})
     save_payload_json(request_id, "google", payload.model_dump())
 
-    checkpoint(request_id, Checkpoint.GOOGLE_DISPATCH_STARTED)
+    checkpoint(request_id, Checkpoint.DISPATCH_STARTED, {"platform": "googleads"})
     dispatch_result = await dispatch_batches_to_google_ads(payload, request_id)
-    checkpoint(request_id, Checkpoint.GOOGLE_DISPATCH_COMPLETED)
+    checkpoint(request_id, Checkpoint.DISPATCH_COMPLETED, {"platform": "googleads"})
     
     # Step 4: Write Audit Log (Similar to Meta, simplified here)
     record = {
