@@ -1,7 +1,7 @@
 # Services/audience_processing_service.py
 import csv, io, time, json, logging
 from datetime import datetime
-from config import settings
+from core.config import settings
 from models.base import RoutingMetadata
 from models.meta_ads import MetaBatchPayload, MetaSession, MetaPayloadData
 from clients.meta_client import dispatch_batches_to_meta

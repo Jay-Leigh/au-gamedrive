@@ -1,6 +1,6 @@
 # Services/google_ads_processing_service.py
 import csv, io, logging
-from config import settings
+from core.config import settings
 from datetime import datetime
 from models.base import RoutingMetadata
 from models.google_ads import GoogleAdsBatchPayload, UserData, UserIdentifier, Consent
