@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 from pydantic import BaseModel, model_validator, field_validator
-from config import settings
+from core.config import settings
 
 class RoutingMetadata(BaseModel):
     filename: str
