@@ -6,7 +6,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     system_token: str
     meta_access_token: str = ""
-    DATABASE_URL: str = "sqlite:///./test_audience_uploader.db"
+    database_url: str = "sqlite:///./test_audience_uploader.db"
+    gs_bucket_name: str = "audience-sync-bucket"
+    app_env: str = "development"
     # Max file size handled by GCP infrastructure — not enforced here
 
     # Pre-approved accounts — will be replaced by PostgreSQL DB lookup in production
@@ -39,6 +41,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
 
 
 settings = Settings()
