@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi import status
 from core.auth import verify_token
 
-from config import settings
+from core.config import settings
 from core.auth import verify_token
 from exceptions import (
     SchemaValidationError,
