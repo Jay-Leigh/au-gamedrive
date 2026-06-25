@@ -3,23 +3,23 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
+      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api'
       - '.'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
+      - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api'
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       - 'run'
-      - 'services'
-      - 'update'
+      - 'deploy'
       - 'audience-sync-api'
-      - '--image=africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
+      - '--image=africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api'
       - '--region=africa-south1'
+      # - '--project=automation-269209'
 
 images:
-  - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api:$SHORT_SHA'
+  - 'africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api'
