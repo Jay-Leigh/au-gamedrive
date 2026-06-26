@@ -1,10 +1,13 @@
 # config.py
 import re, os
 from typing import Dict
-from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+from typing import Optional
+
+load_dotenv()
 
 class Settings(BaseSettings):
-    system_token: str
+    system_token: Optional[str] = os.getenv("SYSTEM_TOKEN")
     meta_access_token: str = ""
     database_url: str = "sqlite:///./test_audience_uploader.db"
     gs_bucket_name: str = "audience-sync-bucket"
