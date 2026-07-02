@@ -1,16 +1,17 @@
 # config.py
 import re, os
 from typing import Dict
+from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 from typing import Optional
 
 load_dotenv()
 
 class Settings(BaseSettings):
-    system_token: Optional[str] = os.getenv("SYSTEM_TOKEN")
+    api_token: Optional[str] = os.getenv("SYSTEM_TOKEN")
     meta_access_token: str = ""
     database_url: str = "sqlite:///./test_audience_uploader.db"
-    gs_bucket_name: str = "audience-sync-bucket"
+    gcs_bucket_name: str = "audience-sync-bucket"
     app_env: str = "development"
     # Max file size handled by GCP infrastructure — not enforced here
 
@@ -19,7 +20,7 @@ class Settings(BaseSettings):
     # when migrating to PostgreSQL on Cloud Run
     approved_accounts: Dict[str, Dict] = { # in future read from DB
         "realbeds": {
-            "meta_audience_id": "YOUR_META_AUDIENCE_ID",
+            "meta_audience_id": "120253772920450348",
             "google_customer_id": "123-456-7890",
             "google_user_list_id": "987654321"
         },
@@ -48,3 +49,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
