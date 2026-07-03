@@ -23,22 +23,34 @@ spec:
       containers:
         - image: africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api
           ports:
-            - containerPort: 8000
+            - containerPort: "8080"
           env:
-            - name: SYSTEM_TOKEN
+            - name: API_TOKEN
               valueFrom:
-                secretKeyRef:
-                  name: audience_uploader_access_token
-                  key: latest
+                secretKeyRef: {name: audience_uploader_access_token, key: latest}
             - name: META_ACCESS_TOKEN
-              value: "placeholder"
-            - name: GS_BUCKET_NAME
+              valueFrom:
+                secretKeyRef: {name: audience_uploader_meta_access_token, key: latest}
+            - name: GCS_BUCKET_NAME
               value: "audience-sync-bucket"
             - name: DATABASE_URL
               valueFrom:
-                secretKeyRef:
-                  name: universal_signal_gateway_db_url
-                  key: latest
+                secretKeyRef: {name: universal_signal_gateway_db_url, key: latest}
+            - name: GOOGLE_DEVELOPER_TOKEN
+              valueFrom:
+                secretKeyRef: { name: google_developer_token, key: latest }
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef: { name: google_client_id, key: latest }
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: { name: google_client_secret, key: latest }
+            - name: GOOGLE_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef: { name: google_refresh_token, key: latest }
+            - name: GOOGLE_LOGIN_CUSTOMER_ID
+              valueFrom:
+                secretKeyRef: { name: google_login_customer_id, key: latest }
           resources:
             limits:
                 cpu: "1"

@@ -2,8 +2,19 @@ services:
   app:
     build: .
     ports:
-      - "8000:8000"
+      - "8000:8080"
     env_file:
       - .env
     volumes:
       - ./storage_bucket:/app/storage_bucket
+
+  # postgres:
+  #   image: postgres:17
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: app
+  #     POSTGRES_PASSWORD: app
+  #     POSTGRES_DB: audience_uploader
+  #   volumes:
+  #     - ./postgres-data:/var/lib/postgresql/data
