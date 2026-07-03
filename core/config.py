@@ -8,11 +8,16 @@ from typing import Optional
 load_dotenv()
 
 class Settings(BaseSettings):
-    api_token: Optional[str] = os.getenv("SYSTEM_TOKEN")
+    api_token: Optional[str] = os.getenv("API_TOKEN")
     meta_access_token: str = ""
     database_url: str = "sqlite:///./test_audience_uploader.db"
     gcs_bucket_name: str = "audience-sync-bucket"
     app_env: str = "development"
+    google_developer_token: str = ""
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_refresh_token: str = ""
+    google_login_customer_id: str = ""
     # Max file size handled by GCP infrastructure — not enforced here
 
     # Pre-approved accounts — will be replaced by PostgreSQL DB lookup in production
