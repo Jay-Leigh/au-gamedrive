@@ -19,12 +19,25 @@ async def dispatch_batches_to_meta(
                 "session": batch.session.model_dump(),
                 "payload": batch.payload.model_dump(by_alias=True)
             }
-            dispatch_results.append({
-                "batch_seq": batch.session.batch_seq,
-                "num_received": len(batch.payload.data),
-                "num_invalid_entries": 0,
-                "invalid_entry_samples": [],
-                "error": None
-            })
+            try:
+                response = await client.post(url, params={"access_token": access_token}, json=payload_dict)
+                response.raise_for_status()
+                result = response.json()
+                dispatch_results.append({
+                    "batch_seq": batch.session.batch_seq,
+                    "num_received": result.get("num_received", 0),
+                    "num_invalid_entries": result.get("num_invalid_entries", 0),
+                    "invalid_entry_samples": result.get("invalid_entry_samples", []),
+                    "error": None
+                })
+            except httpx.HTTPStatusError as e:
+                logging.error(f"[{request_id}] Meta dispatch failed batch {batch.session.batch_seq}: {e.response.text}")
+                dispatch_results.append({
+                    "batch_seq": batch.session.batch_seq,
+                    "num_received": 0,
+                    "num_invalid_entries": 0,
+                    "invalid_entry_samples": [],
+                    "error": e.response.text
+                })
                 
     return dispatch_results
