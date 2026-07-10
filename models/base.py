@@ -1,3 +1,4 @@
+from typing import Literal
 import re
 from datetime import datetime
 from pydantic import BaseModel, model_validator, field_validator
@@ -10,6 +11,8 @@ class RoutingMetadata(BaseModel):
     platform: str
     date: str
     batch_id: str
+    # action: str
+    action: Literal["update", "replace"]
 
     @model_validator(mode="before")
     @classmethod
@@ -17,10 +20,10 @@ class RoutingMetadata(BaseModel):
         raw = data["filename"]
         clean = raw.removesuffix(".csv")
         parts = clean.split("_")
-        if len(parts) != 5:
-            raise ValueError("Filename must have exactly 5 parts: account_audiencename_platform_YYYYMMDD_batchID")
-        account, audience_name, platform, date_str, batch_id = parts
-        data.update(account=account, audience_name=audience_name, platform=platform, date=date_str, batch_id=batch_id)
+        if len(parts) != 6:
+            raise ValueError("Filename must have exactly 6 parts: account_audiencename_platform_YYYYMMDD_batchID_action")
+        account, audience_name, platform, date_str, batch_id, action = parts
+        data.update(account=account, audience_name=audience_name, platform=platform, date=date_str, batch_id=batch_id, action=action)
         return data
 
     @field_validator("account")
