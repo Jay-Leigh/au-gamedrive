@@ -4,4 +4,4 @@ httpx==0.28.1
 sqlalchemy==2.0.41
 python-dotenv==1.1.0
 psycopg[binary]
-google-ads==26.1.0
+google-ads==30.0.0

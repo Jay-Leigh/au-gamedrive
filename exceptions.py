@@ -30,3 +30,8 @@ class PlatformNotImplementedError(ValidationError):
     """Routing hit a platform with no handler."""
     def __init__(self, detail: str):
         super().__init__(detail, status_code=501)
+
+class ActionNotImplementedError(ValidationError):
+    """Replace action requested but REMOVE flow not built yet."""
+    def __init__(self, detail: str):
+        super().__init__(detail, status_code=501)
