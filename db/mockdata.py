@@ -10,15 +10,9 @@ def seed():
     accounts = [
         ApprovedAccount(
             account_name="realbeds",
-            meta_audience_id="YOUR_META_AUDIENCE_ID",
-            google_customer_id="123-456-7890",
-            google_user_list_id="987654321"
-        ),
-        ApprovedAccount(
-            account_name="africanoverlandtours",
-            meta_audience_id="YOUR_META_AUDIENCE_ID_2",
-            google_customer_id="111-222-3333",
-            google_user_list_id="444555666"
+            meta_audience_id="120253772920450348",
+            google_customer_id="7092652546",
+            google_user_list_id="9425866437"
         ),
     ]
 
