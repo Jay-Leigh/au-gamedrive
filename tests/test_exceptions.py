@@ -6,6 +6,7 @@ from exceptions import (
     EmptyFileError,
     DuplicateBatchError,
     PlatformNotImplementedError,
+    ActionNotImplementedError,
 )
 
 def test_filename_validation_error_is_400():
@@ -33,6 +34,10 @@ def test_platform_not_implemented_is_501():
     exc = PlatformNotImplementedError("unknown platform")
     assert exc.status_code == 501
 
+def test_action_not_implemented_is_501():
+    exc = ActionNotImplementedError("replace not supported")
+    assert exc.status_code == 501
+
 def test_all_inherit_from_validation_error():
     for cls in [
         FilenameValidationError,
@@ -41,6 +46,7 @@ def test_all_inherit_from_validation_error():
         EmptyFileError,
         DuplicateBatchError,
         PlatformNotImplementedError,
+        ActionNotImplementedError,
     ]:
         assert issubclass(cls, ValidationError)
 

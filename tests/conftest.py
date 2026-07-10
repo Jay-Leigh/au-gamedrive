@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from config import settings
+from core.config import settings
 from services.audit_logging import reset_audit_state
 
 VALID_HASH = "a744863d83aefc35f62f9a247025dedfc8964b3c0b39dd794dd3816851fc4a94"
@@ -29,11 +29,15 @@ def valid_csv_bytes():
 
 @pytest.fixture
 def valid_filename():
-    return "realbeds_QualifiedLead_meta_20260526_002.csv"
+    return "realbeds_QualifiedLeads_meta_20260526_002_update.csv"
 
 @pytest.fixture
 def valid_google_filename():
-    return "realbeds_QualifiedLead_googleads_20260526_002.csv"
+    return "realbeds_QualifiedLeads_googleads_20260526_002_update.csv"
+
+@pytest.fixture
+def valid_replace_filename():
+    return "realbeds_QualifiedLeads_meta_20260526_002_replace.csv"
 
 @pytest.fixture
 def missing_header_csv_bytes():

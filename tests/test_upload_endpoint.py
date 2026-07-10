@@ -1,8 +1,8 @@
 import os
 import pytest
 
-REAL_META_CSV = "test_csvs/realbeds_QualifiedLead_meta_20260526_001.csv"
-REAL_GOOGLE_CSV = "test_csvs/realbeds1_QualifiedLead_googleads_20260526_001.csv"
+REAL_META_CSV = "test_csvs/realbeds_QualifiedLeads_meta_20260526_001_update.csv"
+REAL_GOOGLE_CSV = "test_csvs/realbeds_QualifiedLeads_googleads_20260526_001_update.csv"
 
 # --- In-memory unit-style E2E tests ---
 
@@ -41,7 +41,7 @@ def test_empty_file_returns_400(client, auth_header):
     response = client.post(
         "/upload",
         headers=auth_header,
-        files={"file": ("realbeds_Lead_meta_20260526_003.csv", b"", "text/csv")},
+       files={"file": ("realbeds_Lead_meta_20260526_003_update.csv", b"", "text/csv")},
     )
     assert response.status_code == 400
     assert "empty" in response.json()["detail"].lower()
@@ -50,7 +50,7 @@ def test_missing_header_returns_400(client, auth_header, missing_header_csv_byte
     response = client.post(
         "/upload",
         headers=auth_header,
-        files={"file": ("realbeds_Lead_meta_20260526_004.csv", missing_header_csv_bytes, "text/csv")},
+       files={"file": ("realbeds_Lead_meta_20260526_004_update.csv", missing_header_csv_bytes, "text/csv")},
     )
     assert response.status_code == 400
     assert "Missing required column" in response.json()["detail"]
@@ -59,10 +59,19 @@ def test_bad_hash_returns_400(client, auth_header, invalid_hash_csv_bytes):
     response = client.post(
         "/upload",
         headers=auth_header,
-        files={"file": ("realbeds_Lead_meta_20260526_005.csv", invalid_hash_csv_bytes, "text/csv")},
+       files={"file": ("realbeds_Lead_meta_20260526_005_update.csv", invalid_hash_csv_bytes, "text/csv")},
     )
     assert response.status_code == 400
     assert "SHA-256" in response.json()["detail"]
+
+def test_replace_action_returns_501(client, auth_header, valid_csv_bytes, valid_replace_filename):
+    response = client.post(
+        "/upload",
+        headers=auth_header,
+        files={"file": (valid_replace_filename, valid_csv_bytes, "text/csv")},
+    )
+    assert response.status_code == 501
+    assert "Replace" in response.json()["detail"]
 
 def test_bad_filename_returns_400(client, auth_header, valid_csv_bytes):
     response = client.post(
