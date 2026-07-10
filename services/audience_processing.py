@@ -52,6 +52,10 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
                 invalid_rows.append({"row_index": index, "field": field, "reason": "Invalid SHA-256 hash"})
                 row_valid = False
                 break
+
+        if row_valid and not row.get("em") and not row.get("ph"):
+            invalid_rows.append({"row_index": index, "field": "em/ph", "reason": "At least one identifier (em or ph) required"})
+            row_valid = False
  
         if row_valid:
             for field in required_strings:
