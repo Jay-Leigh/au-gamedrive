@@ -15,6 +15,7 @@ from exceptions import (
     DuplicateBatchError,
     EmptyFileError,
     PlatformNotImplementedError,
+    ActionNotImplementedError,
 )
 from services.file_validation import validate_filename
 from services.audience_processing import process_meta_upload
@@ -36,6 +37,11 @@ async def upload_audience(
     # Step 1: Validate Filename (raises FilenameValidationError)
     routing_metadata = validate_filename(file.filename)
     checkpoint(request_id, Checkpoint.FILENAME_VALIDATED, {"filename": file.filename})
+
+    if routing_metadata.action == "replace":
+        raise ActionNotImplementedError(
+            f"Replace action not yet supported. batchID '{routing_metadata.batch_id}' rejected."
+        )
 
     # Step 2: Duplicate batchID check
     if is_duplicate_batch(routing_metadata.account, routing_metadata.batch_id):
