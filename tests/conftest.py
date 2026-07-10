@@ -17,7 +17,7 @@ def reset_audit():
 
 @pytest.fixture
 def auth_header():
-    return {"Authorization": f"Bearer {settings.system_token}"}
+    return {"Authorization": f"Bearer {settings.api_token}"}
 
 @pytest.fixture
 def valid_csv_bytes():
