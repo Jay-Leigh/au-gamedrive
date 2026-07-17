@@ -23,7 +23,7 @@ class RoutingMetadata(BaseModel):
         if len(parts) != 6:
             raise ValueError("Filename must have exactly 6 parts: account_audiencename_platform_YYYYMMDD_batchID_action")
         account, audience_name, platform, date_str, batch_id, action = parts
-        data.update(account=account, audience_name=audience_name, platform=platform, date=date_str, batch_id=batch_id, action=action)
+        data.update(account=account.lower(), audience_name=audience_name, platform=platform.lower(), date=date_str, batch_id=batch_id, action=action)
         return data
 
     @field_validator("account")

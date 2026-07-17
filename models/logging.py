@@ -62,6 +62,7 @@ class AuditLog(Base):
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     account: Mapped[str] = mapped_column(String(100), nullable=False)
     platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    audience_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     source_system: Mapped[str] = mapped_column(String(30), nullable=False, default="audience_uploader")
     total_rows: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     valid_rows: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
