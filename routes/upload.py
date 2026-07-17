@@ -26,6 +26,7 @@ from services.storage import save_raw
 router = APIRouter()
 
 @router.post("/upload")
+@router.post("/v1/audience/csv")
 async def upload_audience(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
