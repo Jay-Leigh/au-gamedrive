@@ -5,3 +5,4 @@ sqlalchemy==2.0.41
 python-dotenv==1.1.0
 psycopg[binary]
 google-ads==30.0.0
+alembic==1.18.5
