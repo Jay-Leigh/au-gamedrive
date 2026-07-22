@@ -11,7 +11,7 @@ async def dispatch_batches_to_meta(
     
     dispatch_results = []
     
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(60.0, connect=10.0)) as client:
         for batch in payloads:
             url = f"https://graph.facebook.com/v25.0/{batch.audience_id}/users"
             
@@ -38,6 +38,15 @@ async def dispatch_batches_to_meta(
                     "num_invalid_entries": 0,
                     "invalid_entry_samples": [],
                     "error": e.response.text
+                })
+            except httpx.RequestError as e:
+                logging.error(f"[{request_id}] Meta dispatch network error batch {batch.session.batch_seq}: {e!r}")
+                dispatch_results.append({
+                    "batch_seq": batch.session.batch_seq,
+                    "num_received": 0,
+                    "num_invalid_entries": 0,
+                    "invalid_entry_samples": [],
+                    "error": str(e)
                 })
                 
     return dispatch_results
