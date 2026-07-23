@@ -1,5 +1,5 @@
 # Services/google_ads_processing_service.py
-import csv, io, logging
+import csv, io, logging, asyncio
 from core.config import settings
 from datetime import datetime
 from models.base import RoutingMetadata
@@ -8,24 +8,12 @@ from clients.google_ads_client import dispatch_batches_to_google_ads
 from services.audit_logging import write_audit, checkpoint, Checkpoint
 from services.storage import save_processed_csv, save_payload_json
 
-async def process_google_ads_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
-    logging.info(f"[{request_id}] Starting Google Ads async processing...")
- 
+def _validate_google_rows(csv_content: str):
     reader = csv.DictReader(io.StringIO(csv_content))
-    
     valid_operations = []
     invalid_rows = []
-    
-    # In a real scenario, you'd fetch this from your config/DB based on the account
-    # For now, we mock the Customer ID and User List ID
-    account_cfg = settings.approved_accounts[routing_metadata.account]
-    customer_id = account_cfg["google_customer_id"]
-    user_list_id = account_cfg["google_user_list_id"]
 
-    # Step 1: Validate and Transform Rows
     for index, row in enumerate(reader):
-        # We assume the spot check in main.py already validated hashes.
-        # We map the CSV fields to Google's UserIdentifier schema
         em = row.get("em")
         ph = row.get("ph")
 
@@ -41,6 +29,18 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
         )
         user_data = UserData(user_identifiers=[identifier])
         valid_operations.append(user_data)
+
+    return valid_operations, invalid_rows
+
+async def process_google_ads_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
+    logging.info(f"[{request_id}] Starting Google Ads async processing...")
+ 
+    account_cfg = settings.approved_accounts[routing_metadata.account]
+    customer_id = account_cfg["google_customer_id"]
+    user_list_id = account_cfg["google_user_list_id"]
+
+    # Step 1: Validate and Transform Rows (CPU-bound, offloaded to thread)
+    valid_operations, invalid_rows = await asyncio.to_thread(_validate_google_rows, csv_content)
 
     if not valid_operations:
         checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": 0, "invalid": len(invalid_rows)})

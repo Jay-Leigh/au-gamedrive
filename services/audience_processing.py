@@ -1,5 +1,5 @@
 # Services/audience_processing_service.py
-import csv, io, time, json, logging
+import csv, io, time, json, logging, asyncio
 from datetime import datetime
 from core.config import settings
 from models.base import RoutingMetadata
@@ -30,22 +30,18 @@ def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, 
     write_audit(request_id, record)
     logging.info(f"AUDIT LOG [{request_id}]: status={overall_status} valid={valid_rows_count} succeeded={succeeded_count}")
 
-async def process_meta_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
-    logging.info(f"[{request_id}] Starting async processing...")
- 
+def _validate_meta_rows(csv_content: str):
     reader = csv.DictReader(io.StringIO(csv_content))
     headers = reader.fieldnames or []
- 
+
     valid_rows = []
     invalid_rows = []
     hashed_fields = ["em", "ph"]
     required_strings = ["external_id", "event_name", "event_time"]
- 
-    # Step 4: Validate Rows
-    checkpoint(request_id, Checkpoint.ROWS_VALIDATED)
+
     for index, row in enumerate(reader):
         row_valid = True
- 
+
         for field in hashed_fields:
             val = row.get(field, "")
             if val and not settings.sha256_regex.match(val):
@@ -56,17 +52,26 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
         if row_valid and not row.get("em") and not row.get("ph"):
             invalid_rows.append({"row_index": index, "field": "em/ph", "reason": "At least one identifier (em or ph) required"})
             row_valid = False
- 
+
         if row_valid:
             for field in required_strings:
                 if not row.get(field):
                     invalid_rows.append({"row_index": index, "field": field, "reason": "Required field is empty"})
                     row_valid = False
                     break
- 
+
         if row_valid:
             valid_rows.append(row)
- 
+
+    return valid_rows, invalid_rows, headers
+
+async def process_meta_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
+    logging.info(f"[{request_id}] Starting async processing...")
+
+    # Step 4: Validate Rows (CPU-bound, offloaded to thread to avoid blocking event loop)
+    checkpoint(request_id, Checkpoint.ROWS_VALIDATED)
+    valid_rows, invalid_rows, headers = await asyncio.to_thread(_validate_meta_rows, csv_content)
+
     if not valid_rows:
         logging.error(f"[{request_id}] No valid rows after full validation. Aborting.")
         checkpoint(request_id, Checkpoint.ROWS_VALIDATED)
