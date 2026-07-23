@@ -45,9 +45,9 @@ async def upload_audience(
         )
 
     # Step 2: Duplicate batchID check
-    if is_duplicate_batch(routing_metadata.account, routing_metadata.batch_id):
+    if is_duplicate_batch(routing_metadata.account, routing_metadata.audience_name, routing_metadata.platform, routing_metadata.date, routing_metadata.batch_id):
         raise DuplicateBatchError(
-            f"Duplicate batchID '{routing_metadata.batch_id}' for account '{routing_metadata.account}'. Already processed."
+            f"Duplicate batchID '{routing_metadata.batch_id}' for account '{routing_metadata.account}', audience '{routing_metadata.audience_name}', platform '{routing_metadata.platform}', date '{routing_metadata.date}'. Already processed."
         )
 
     # Step 3: Read + validate headers
@@ -87,7 +87,7 @@ async def upload_audience(
                 )
 
     # Register + hand off
-    register_batch(routing_metadata.account, routing_metadata.batch_id, request_id)
+    register_batch(routing_metadata.account, routing_metadata.audience_name, routing_metadata.platform, routing_metadata.date, routing_metadata.batch_id, request_id)
     checkpoint(request_id, Checkpoint.BATCH_REGISTERED, {"batch_id": routing_metadata.batch_id})
     total_rows = max(len(csv_str.splitlines()) - 1, 0)
 
