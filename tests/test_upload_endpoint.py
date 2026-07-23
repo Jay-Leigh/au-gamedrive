@@ -1,8 +1,8 @@
 import os
 import pytest
 
-REAL_META_CSV = "test_csvs/realbeds_QualifiedLeads_meta_20260526_001_update.csv"
-REAL_GOOGLE_CSV = "test_csvs/realbeds_QualifiedLeads_googleads_20260526_001_update.csv"
+REAL_META_CSV = "test_csvs/realbeds_QualifiedLead_meta_20260526_001_update.csv"
+REAL_GOOGLE_CSV = "test_csvs/realbeds_QualifiedLead_googleads_20260526_001_update.csv"
 
 # --- In-memory unit-style E2E tests ---
 
