@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     # when migrating to PostgreSQL on Cloud Run
     approved_accounts: Dict[str, Dict] = { # in future read from DB
         "realbeds": {
-            "meta_audience_id": "120253772920450348",
+           "audiences": {
+               "QualifiedLead": {"meta_audience_id": "120253772920450348"},
+               "BedZoneQualifiedLead": {"meta_audience_id": "120254471375470348"}
+           },
             "google_customer_id": "7092652546",
             "google_user_list_id": "9425866437"
         },
