@@ -83,7 +83,12 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
 
     # Step 5: Transform to Meta Payload
     account_cfg = settings.approved_accounts[routing_metadata.account]
-    audience_id = account_cfg["meta_audience_id"]
+    audience_cfg = account_cfg["audiences"].get(routing_metadata.audience_name)
+    if not audience_cfg:
+        logging.error(f"[{request_id}] No Meta audience configured for '{routing_metadata.audience_name}'")
+        write_audit_log(request_id, routing_metadata, len(valid_rows), len(valid_rows), invalid_rows, [], "failed")
+        return
+    audience_id = audience_cfg["meta_audience_id"]
     schema = ["EMAIL", "PHONE", "EXTERN_ID"]
  
     if "fn" in headers: schema.append("FN")
