@@ -6,6 +6,19 @@ REAL_GOOGLE_CSV = "test_csvs/realbeds_QualifiedLead_googleads_20260526_001_updat
 
 # --- In-memory unit-style E2E tests ---
 
+def test_unconfigured_audience_name_status_returns_failed(client, auth_header, valid_csv_bytes):
+    filename = "realbeds_UnknownAudience_meta_20260526_777_update.csv"
+    upload = client.post(
+        "/upload",
+        headers=auth_header,
+        files={"file": (filename, valid_csv_bytes, "text/csv")},
+    )
+    assert upload.status_code == 202
+    request_id = upload.json()["request_id"]
+    status = client.get(f"/status/{request_id}", headers=auth_header)
+    assert status.status_code == 200
+    assert status.json()["overall_status"] == "failed"
+
 def test_valid_meta_upload_returns_202(client, auth_header, valid_csv_bytes, valid_filename):
     response = client.post(
         "/upload",
