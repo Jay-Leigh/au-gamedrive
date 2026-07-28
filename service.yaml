@@ -37,11 +37,19 @@ spec:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef: {name: universal_signal_gateway_db_url, key: latest}
-            - name: GOOGLE_ADS_YAML
+            - name: GOOGLE_ADS_CLIENT_ID
               valueFrom:
-                secretKeyRef:
-                  name: google-ads-yaml
-                  key: latest
+                secretKeyRef: {name: GOOGLE_ADS_CLIENT_ID, key: latest}
+            - name: GOOGLE_ADS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: {name: GOOGLE_ADS_AUDIENCE_SECRET, key: latest}
+            - name: GOOGLE_ADS_REFRESH_TOKEN
+              valueFrom:
+                secretKeyRef: {name: GOOGLE_ADS_AUDIENCE_REFRESH_TOKEN, key: latest}
+            - name: GOOGLE_ADS_LOGIN_CUSTOMER_ID
+              value: "4634083036"
+            - name: GOOGLE_ADS_CUSTOMER_ID
+              value: "7092652546"
           resources:
             limits:
                 cpu: "1"
