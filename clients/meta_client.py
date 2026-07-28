@@ -23,6 +23,8 @@ async def dispatch_batches_to_meta(
                 response = await client.post(url, params={"access_token": access_token}, json=payload_dict)
                 response.raise_for_status()
                 result = response.json()
+                if result.get("num_invalid_entries", 0) > 0:
+                   logging.warning(f"[{request_id}] Meta batch {batch.session.batch_seq} invalid entries: {result.get('num_invalid_entries')} samples={result.get('invalid_entry_samples')}")
                 dispatch_results.append({
                     "batch_seq": batch.session.batch_seq,
                     "num_received": result.get("num_received", 0),

@@ -96,7 +96,8 @@ def _dispatch_sync(payload: GoogleAdsBatchPayload, request_id: str) -> Dict[str,
         ),
     )
 
-    response = client.ingest_audience_members(request=request)
+    response = client.ingest_audience_members(request=request, timeout=60.0)
+    logger.info(f"[{request_id}] Data Manager raw response: {response!r}")
     logger.info(f"[{request_id}] Google Ads Data Manager job accepted, request_id={response.request_id}, operations={len(audience_members)}")
     return {"status": "success", "operations_processed": len(audience_members), "error": None}
 
@@ -106,4 +107,7 @@ async def dispatch_batches_to_google_ads(payload: GoogleAdsBatchPayload, request
         return await asyncio.to_thread(_dispatch_sync, payload, request_id)
     except GoogleAPICallError as ex:
         logger.error(f"[{request_id}] Google Ads Data Manager dispatch failed: {ex}")
+        return {"status": "failed", "operations_processed": 0, "error": str(ex)}
+    except Exception as ex:
+        logger.error(f"[{request_id}] Google Ads Data Manager dispatch unexpected error: {ex!r}")
         return {"status": "failed", "operations_processed": 0, "error": str(ex)}
