@@ -13,7 +13,12 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./test_audience_uploader.db"
     gcs_bucket_name: str = "audience-sync-bucket"
     app_env: str = "development"
-    google_ads_yaml: str = ""
+    google_ads_login_customer_id: str
+    google_ads_customer_id: str
+    google_ads_refresh_token: str
+    google_ads_client_id: str
+    google_ads_client_secret: str
+    google_ads_developer_token: Optional[str] = None  # not used by Data Manager API
     # Max file size handled by GCP infrastructure — not enforced here
 
     # Pre-approved accounts — will be replaced by PostgreSQL DB lookup in production
@@ -43,4 +48,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
