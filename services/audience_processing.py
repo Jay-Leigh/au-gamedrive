@@ -11,6 +11,8 @@ from services.storage import save_processed_csv, save_payload_json
 def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, invalid_rows, dispatch_results, overall_status):
     failed_batches = [{"batch_seq": r["batch_seq"], "error": r["error"]} for r in dispatch_results if r.get("error")]
     succeeded_count = sum(r.get("num_received", 0) for r in dispatch_results if not r.get("error"))
+    invalid_entries_count = sum(r.get("num_invalid_entries", 0) for r in dispatch_results)
+    invalid_entries_samples = [s for r in dispatch_results for s in r.get("invalid_entry_samples", [])][:20]
  
     record = {
         "request_id": request_id,
@@ -24,11 +26,13 @@ def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, 
         "invalid_rows": invalid_rows,
         "dispatched": len(dispatch_results),
         "succeeded": succeeded_count,
+        "meta_invalid_entries": invalid_entries_count,
+        "meta_invalid_samples": invalid_entries_samples,
         "failed": failed_batches,
         "overall_status": overall_status
     }
     write_audit(request_id, record)
-    logging.info(f"AUDIT LOG [{request_id}]: status={overall_status} valid={valid_rows_count} succeeded={succeeded_count}")
+    logging.info(f"AUDIT LOG [{request_id}]: status={overall_status} valid={valid_rows_count} succeeded={succeeded_count} meta_invalid={invalid_entries_count}")
 
 def _validate_meta_rows(csv_content: str):
     reader = csv.DictReader(io.StringIO(csv_content))

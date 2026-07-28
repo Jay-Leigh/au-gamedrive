@@ -21,6 +21,16 @@ def _validate_google_rows(csv_content: str):
             invalid_rows.append({"row_index": index, "reason": "No identifiers present (em or ph required)"})
             continue
 
+        row_valid = True
+        for field, val in (("em", em), ("ph", ph)):
+            if val and not settings.sha256_regex.match(val):
+                invalid_rows.append({"row_index": index, "field": field, "reason": "Invalid SHA-256 hash"})
+                row_valid = False
+                break
+        if not row_valid:
+            continue
+
+
         identifier = UserIdentifier(
             hashed_email=em or None,
             hashed_phone_number=ph or None,
