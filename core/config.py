@@ -28,7 +28,8 @@ class Settings(BaseSettings):
         "realbeds": {
            "audiences": {
                "QualifiedLead": {"meta_audience_id": "120253772920450348"},
-               "BedZoneQualifiedLead": {"meta_audience_id": "120254471375470348"}
+               "BedZoneQualifiedLead": {"meta_audience_id": "120254471375470348"},
+               "testCombinedfile": {"meta_audience_id": "120254650290030348"},
            },
             "google_customer_id": "7092652546",
             "google_user_list_id": "9425866437"
