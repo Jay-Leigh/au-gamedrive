@@ -67,7 +67,7 @@ async def upload_audience(
     checkpoint(request_id, Checkpoint.HEADERS_VALIDATED, {"headers": parsed_headers})
 
     # Step 4: Save raw file (only after validation passes)
-    raw_path = save_raw(file.filename, content)
+    raw_path = save_raw(request_id, file.filename, content)
     checkpoint(request_id, Checkpoint.FILE_SAVED, {"path": raw_path})
 
     # Step 5: Spot-check first 5 rows (raises HashValidationError)
