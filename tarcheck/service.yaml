@@ -1,0 +1,47 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: audience-sync-api
+  labels:
+    team: "conversion-science"
+    app: "audience-sync-api"
+    product: "audience-uploader"
+    client: "conversion-science"
+spec:
+  template:
+    metadata:
+      labels:
+        team: "conversion-science"
+        app: "audience-sync-api"
+        product: "audience-uploader"
+        client: "conversion-science"
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "1"
+        run.googleapis.com/cloudsql-instances: "automation-269209:africa-south1:cs-internal-test-db"
+    spec:
+      containers:
+        - image: africa-south1-docker.pkg.dev/automation-269209/audience-sync-repo/audience-sync-api
+          ports:
+            - containerPort: "8080"
+          env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef: {name: audience_uploader_access_token, key: latest}
+            - name: META_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef: {name: audience_uploader_meta_access_token, key: latest}
+            - name: GCS_BUCKET_NAME
+              value: "audience-sync-bucket"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: {name: universal_signal_gateway_db_url, key: latest}
+            - name: GOOGLE_ADS_YAML
+              valueFrom:
+                secretKeyRef:
+                  name: google-ads-yaml
+                  key: latest
+          resources:
+            limits:
+                cpu: "1"
+                memory: 512Mi

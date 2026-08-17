@@ -23,10 +23,6 @@ def test_wrong_part_count_raises():
     with pytest.raises(FilenameValidationError, match="exactly 6 parts"):
         validate_filename("too_few_parts.csv")
 
-def test_unknown_account_raises():
-    with pytest.raises(FilenameValidationError, match="Unknown account"):
-        validate_filename("fakeclient_QualifiedLead_meta_20260526_001_update.csv")
-
 def test_empty_eventname_raises():
     with pytest.raises(FilenameValidationError, match="cannot be empty"):
         validate_filename("realbeds__meta_20260526_001_update.csv")

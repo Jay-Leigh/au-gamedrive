@@ -10,7 +10,7 @@ from services.storage import save_processed_csv, save_payload_json
 from core.utils import validate_identifier_rows
 
 def _validate_google_rows(csv_content: str):
-    valid_rows, invalid_rows, missing_email_count = validate_identifier_rows(csv_content)
+    valid_rows, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count = validate_identifier_rows(csv_content)
 
     valid_operations = []
     for row in valid_rows:
@@ -23,7 +23,7 @@ def _validate_google_rows(csv_content: str):
         user_data = UserData(user_identifiers=[identifier])
         valid_operations.append(user_data)
 
-    return valid_operations, invalid_rows, missing_email_count
+    return valid_operations, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count
 
 async def process_google_ads_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
     logging.info(f"[{request_id}] Starting Google Ads async processing...")
@@ -33,11 +33,32 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
     user_list_id = account_cfg["google_user_list_id"]
 
     # Step 1: Validate and Transform Rows (CPU-bound, offloaded to thread)
-    valid_operations, invalid_rows, missing_email_count = await asyncio.to_thread(_validate_google_rows, csv_content)
+    valid_operations, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count = await asyncio.to_thread(_validate_google_rows, csv_content)
 
     if not valid_operations:
         checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": 0, "invalid": len(invalid_rows)})
         logging.error(f"[{request_id}] No valid operations for Google Ads. Aborting.")
+        record = {
+            "request_id": request_id,
+            "filename": routing_metadata.filename,
+            "account": routing_metadata.account,
+            "platform": "googleads",
+            "eventname": routing_metadata.audience_name,
+            "timestamp": datetime.now().isoformat(),
+            "total_rows": len(invalid_rows),
+            "valid_rows": 0,
+            "invalid_rows": invalid_rows,
+            "dispatched": 0,
+            "succeeded": 0,
+            "missing_email_count": missing_email_count,
+            "fn_eq_ln_count": fn_eq_ln_count,
+            "dup_email_row_count": dup_email_row_count,
+            "dropped_name_only_count": 0,
+            "failed": [],
+            "overall_status": "failed"
+        }
+        write_audit(request_id, record)
+        logging.info(f"AUDIT LOG [{request_id}]: status=failed valid=0")
         return
     
     checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": len(valid_operations), "invalid": len(invalid_rows)})
@@ -72,6 +93,9 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
         "dispatched": len(valid_operations),
         "succeeded": dispatch_result.get("operations_processed", 0),
         "missing_email_count": missing_email_count,
+        "fn_eq_ln_count": fn_eq_ln_count,
+        "dup_email_row_count": dup_email_row_count,
+        "dropped_name_only_count": dispatch_result.get("dropped_name_only", 0),
         "failed": [],
         "overall_status": "completed" if not dispatch_result.get("error") else "failed"
     }
@@ -79,3 +103,9 @@ async def process_google_ads_upload(request_id: str, csv_content: str, routing_m
     logging.info(f"AUDIT LOG [{request_id}]: status={record['overall_status']}")
     if missing_email_count:
         logging.warning(f"[{request_id}] {missing_email_count} valid row(s) missing em — matching quality/probability may be reduced")
+    if fn_eq_ln_count:
+        logging.warning(f"[{request_id}] {fn_eq_ln_count} valid row(s) have fn==ln — check source columns feeding these fields upstream of hashing")
+    if dup_email_row_count:
+        logging.warning(f"[{request_id}] {dup_email_row_count} valid row(s) share a repeated em hash with another row")
+    if record["dropped_name_only_count"]:
+        logging.warning(f"[{request_id}] {record['dropped_name_only_count']} row(s) had only a name identifier and were dropped — Data Manager API requires email or phone, name-only matching isn't supported yet")

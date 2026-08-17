@@ -29,8 +29,8 @@ class RoutingMetadata(BaseModel):
     @field_validator("account")
     @classmethod
     def check_account(cls, v):
-        if v not in settings.approved_accounts:
-            raise ValueError(f"Unknown account: {v}")
+        # if v not in settings.approved_accounts:
+        #     raise ValueError(f"Unknown account: {v}")
         return v
 
     @field_validator("audience_name")

@@ -138,3 +138,12 @@ def test_real_google_csv_upload(client, auth_header):
             files={"file": (filename, f.read(), "text/csv")},
         )
     assert response.status_code == 202
+
+def test_unknown_account_returns_400(client, auth_header, valid_csv_bytes):
+    response = client.post(
+        "/upload",
+        headers=auth_header,
+        files={"file": ("fakeclient_QualifiedLead_meta_20260526_001_update.csv", valid_csv_bytes, "text/csv")},
+    )
+    assert response.status_code == 400
+    assert "Unknown account" in response.json()["detail"]

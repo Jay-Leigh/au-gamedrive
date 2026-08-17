@@ -49,5 +49,8 @@ CREATE TABLE audit_logs (
 CREATE INDEX ix_audit_logs_request_id ON audit_logs (request_id);
 
 INSERT INTO approved_accounts (account, audience_name, platform, destination, is_active) VALUES
-('realbeds', 'QualifiedLead', 'meta', '{"audience_id": "120253772920450348"}', 1),
-('realbeds', 'QualifiedLead', 'googleads', '{"customer_id": "7092652546", "user_list_id": "9425866437"}', 1);
+('realbeds', 'QualifiedLead', 'meta', '{"audience_id": "120253772920450348"}', true),
+('realbeds', 'BedZoneQualifiedLead', 'meta', '{"audience_id": "120254471375470348"}', true),
+('realbeds', 'testCombinedfile', 'meta', '{"audience_id": "120254650290030348"}', true),
+('realbeds', 'QualifiedLead', 'googleads', '{"customer_id": "7092652546", "user_list_id": "9425866437"}', true)
+ON CONFLICT (account, audience_name, platform) DO NOTHING;

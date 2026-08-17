@@ -5,6 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import DateTime, Integer, String, JSON, func
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from helpers.db import Base
@@ -45,6 +46,7 @@ class CheckpointLog(Base):
     request_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     checkpoint: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
+    message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     raw_payload: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     source_system: Mapped[str] = mapped_column(String(30), nullable=False, default="audience_uploader")
     created_at: Mapped[datetime] = mapped_column(
@@ -69,6 +71,9 @@ class AuditLog(Base):
     invalid_rows: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     dispatched: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     succeeded: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    meta_invalid_entries: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    meta_invalid_samples: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    missing_email_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=0)
     failed: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     overall_status: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -87,6 +92,7 @@ class CheckpointLogSchema(BaseModel):
     request_id: str
     checkpoint: str
     status: str
+    message: Optional[str] = None
     raw_payload: Optional[dict] = None
     source_system: str
     created_at: datetime
@@ -106,6 +112,9 @@ class AuditLogSchema(BaseModel):
     invalid_rows: Optional[list] = None
     dispatched: int
     succeeded: int
+    meta_invalid_entries: Optional[int] = None
+    meta_invalid_samples: Optional[list] = None
+    missing_email_count: Optional[int] = None
     failed: Optional[list] = None
     overall_status: str
     created_at: datetime

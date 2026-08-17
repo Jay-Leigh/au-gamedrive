@@ -6,6 +6,23 @@ from services.audit_logging import reset_audit_state
 from db.database import engine, SessionLocal, Base
 import db.models, models.logging
 from services.approved_accounts import upsert_approved_account
+import services.storage
+class _FakeBlob:
+    def __init__(self, store, path):
+        self._store, self._path = store, path
+    def upload_from_string(self, content, content_type=None):
+        self._store[self._path] = content
+
+class _FakeBucket:
+    def __init__(self):
+        self.store = {}
+    def blob(self, path):
+        return _FakeBlob(self.store, path)
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_gcs():
+    services.storage._bucket = _FakeBucket()
+
 
 @pytest.fixture(scope="session", autouse=True)
 def seed_test_accounts():
