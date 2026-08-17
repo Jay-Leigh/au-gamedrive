@@ -52,8 +52,9 @@ def _build_destination(payload: GoogleAdsBatchPayload) -> Destination:
     return destination
 
 
-def _build_audience_members(payload: GoogleAdsBatchPayload) -> list[AudienceMember]:
+def _build_audience_members(payload: GoogleAdsBatchPayload) -> tuple[list[AudienceMember], int]:
     members = []
+    dropped_name_only = 0
     for op in payload.operations:
         identifiers = []
         for identifier in op.user_identifiers:
@@ -67,17 +68,18 @@ def _build_audience_members(payload: GoogleAdsBatchPayload) -> list[AudienceMemb
             # is extended and CSV schema provides those fields.
             elif identifier.hashed_first_name:
                 logger.warning("Skipping name-only identifier: address_code/postal_code not in model.")
+                dropped_name_only += 1
                 continue
 
         if identifiers:
             members.append(AudienceMember(user_data=UserData(user_identifiers=identifiers)))
-    return members
+    return members, dropped_name_only
 
 
 def _dispatch_sync(payload: GoogleAdsBatchPayload, request_id: str) -> Dict[str, Any]:
     client = _build_client()
     destination = _build_destination(payload)
-    audience_members = _build_audience_members(payload)
+    audience_members, dropped_name_only = _build_audience_members(payload)
 
     consent_status = ConsentStatus.CONSENT_GRANTED if payload.consent.ad_user_data == "GRANTED" else ConsentStatus.CONSENT_DENIED
     personalization_status = ConsentStatus.CONSENT_GRANTED if payload.consent.ad_personalization == "GRANTED" else ConsentStatus.CONSENT_DENIED
@@ -99,7 +101,7 @@ def _dispatch_sync(payload: GoogleAdsBatchPayload, request_id: str) -> Dict[str,
     response = client.ingest_audience_members(request=request, timeout=60.0)
     logger.info(f"[{request_id}] Data Manager raw response: {response!r}")
     logger.info(f"[{request_id}] Google Ads Data Manager job accepted, request_id={response.request_id}, operations={len(audience_members)}")
-    return {"status": "success", "operations_processed": len(audience_members), "error": None}
+    return {"status": "success", "operations_processed": len(audience_members), "dropped_name_only": dropped_name_only, "error": None}
 
 
 async def dispatch_batches_to_google_ads(payload: GoogleAdsBatchPayload, request_id: str) -> Dict[str, Any]:

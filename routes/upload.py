@@ -5,10 +5,12 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Depends
 from fastapi.responses import JSONResponse
 from fastapi import status
+from sqlalchemy.orm import Session
 from core.auth import verify_token
 
 from core.config import settings
 from core.auth import verify_token
+from db.database import get_db
 from exceptions import (
     SchemaValidationError,
     HashValidationError,
@@ -16,8 +18,10 @@ from exceptions import (
     EmptyFileError,
     PlatformNotImplementedError,
     ActionNotImplementedError,
+    FilenameValidationError,
 )
 from services.file_validation import validate_filename
+from services.approved_accounts import is_known_account
 from services.audience_processing import process_meta_upload
 from services.google_ads_processing import process_google_ads_upload
 from services.audit_logging import is_duplicate_batch, register_batch, checkpoint, Checkpoint
@@ -31,13 +35,16 @@ async def upload_audience(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     token: str = Depends(verify_token),
+    db: Session = Depends(get_db),
 ):
-    request_id = str(uuid.uuid4()) ## can change name to job_id
+    request_id = str(uuid.uuid4())
     checkpoint(request_id, Checkpoint.FILE_RECEIVED, {"filename": file.filename})
 
     # Step 1: Validate Filename (raises FilenameValidationError)
     routing_metadata = validate_filename(file.filename)
     checkpoint(request_id, Checkpoint.FILENAME_VALIDATED, {"filename": file.filename})
+    if not is_known_account(db, routing_metadata.account):
+       raise FilenameValidationError(f"Unknown account: {routing_metadata.account}")
 
     if routing_metadata.action == "replace":
         raise ActionNotImplementedError(
@@ -55,7 +62,7 @@ async def upload_audience(
     if len(content) == 0:
         raise EmptyFileError("Uploaded file is empty")
 
-    csv_str = content.decode("utf-8")
+    csv_str = content.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(csv_str))
 
     parsed_headers = reader.fieldnames or []

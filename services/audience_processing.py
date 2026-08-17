@@ -9,7 +9,7 @@ from services.audit_logging import write_audit, checkpoint, Checkpoint
 from services.storage import save_processed_csv, save_payload_json
 from core.utils import validate_identifier_rows
 
-def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, invalid_rows, dispatch_results, overall_status, missing_email_count=0):
+def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, invalid_rows, dispatch_results, overall_status, missing_email_count=0, fn_eq_ln_count=0, dup_email_row_count=0):
     failed_batches = [{"batch_seq": r["batch_seq"], "error": r["error"]} for r in dispatch_results if r.get("error")]
     succeeded_count = sum(r.get("num_received", 0) for r in dispatch_results if not r.get("error"))
     invalid_entries_count = sum(r.get("num_invalid_entries", 0) for r in dispatch_results)
@@ -30,6 +30,8 @@ def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, 
         "meta_invalid_entries": invalid_entries_count,
         "meta_invalid_samples": invalid_entries_samples,
         "missing_email_count": missing_email_count,
+        "fn_eq_ln_count": fn_eq_ln_count,
+        "dup_email_row_count": dup_email_row_count,
         "failed": failed_batches,
         "overall_status": overall_status
     }
@@ -37,10 +39,14 @@ def write_audit_log(request_id, routing_metadata, total_rows, valid_rows_count, 
     logging.info(f"AUDIT LOG [{request_id}]: status={overall_status} valid={valid_rows_count} succeeded={succeeded_count} meta_invalid={invalid_entries_count}")
     if missing_email_count:
         logging.warning(f"[{request_id}] {missing_email_count} valid row(s) missing em — matching quality/probability may be reduced")
+    if fn_eq_ln_count:
+        logging.warning(f"[{request_id}] {fn_eq_ln_count} valid row(s) have fn==ln — check source columns feeding these fields upstream of hashing")
+    if dup_email_row_count:
+        logging.warning(f"[{request_id}] {dup_email_row_count} valid row(s) share a repeated em hash with another row")
 
 def _validate_meta_rows(csv_content: str):
     headers = next(csv.reader(io.StringIO(csv_content)), [])
-    valid_rows, invalid_rows, missing_email_count = validate_identifier_rows(csv_content)
+    valid_rows, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count = validate_identifier_rows(csv_content)
 
     required_strings = ["external_id", "event_name", "event_time"]
     fully_valid_rows = []
@@ -54,19 +60,19 @@ def _validate_meta_rows(csv_content: str):
         if row_valid:
             fully_valid_rows.append(row)
 
-    return fully_valid_rows, invalid_rows, headers, missing_email_count
+    return fully_valid_rows, invalid_rows, headers, missing_email_count, fn_eq_ln_count, dup_email_row_count
 
 async def process_meta_upload(request_id: str, csv_content: str, routing_metadata: RoutingMetadata):
     logging.info(f"[{request_id}] Starting async processing...")
 
     # Step 4: Validate Rows (CPU-bound, offloaded to thread to avoid blocking event loop)
     checkpoint(request_id, Checkpoint.ROWS_VALIDATED)
-    valid_rows, invalid_rows, headers, missing_email_count = await asyncio.to_thread(_validate_meta_rows, csv_content)
+    valid_rows, invalid_rows, headers, missing_email_count, fn_eq_ln_count, dup_email_row_count = await asyncio.to_thread(_validate_meta_rows, csv_content)
 
     if not valid_rows:
         logging.error(f"[{request_id}] No valid rows after full validation. Aborting.")
         checkpoint(request_id, Checkpoint.ROWS_VALIDATED)
-        write_audit_log(request_id, routing_metadata, len(invalid_rows), 0, invalid_rows, [], "failed", missing_email_count)
+        write_audit_log(request_id, routing_metadata, len(invalid_rows), 0, invalid_rows, [], "failed", missing_email_count, fn_eq_ln_count, dup_email_row_count)
         return
     
     checkpoint(request_id, Checkpoint.ROWS_VALIDATED, {"valid": len(valid_rows), "invalid": len(invalid_rows)})
@@ -77,7 +83,7 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
     audience_cfg = account_cfg["audiences"].get(routing_metadata.audience_name)
     if not audience_cfg:
         logging.error(f"[{request_id}] No Meta audience configured for '{routing_metadata.audience_name}'")
-        write_audit_log(request_id, routing_metadata, len(valid_rows), len(valid_rows), invalid_rows, [], "failed", missing_email_count)
+        write_audit_log(request_id, routing_metadata, len(valid_rows), len(valid_rows), invalid_rows, [], "failed", missing_email_count, fn_eq_ln_count, dup_email_row_count)
         return
     audience_id = audience_cfg["meta_audience_id"]
     schema = ["EMAIL", "PHONE", "EXTERN_ID"]
@@ -131,4 +137,4 @@ async def process_meta_upload(request_id: str, csv_content: str, routing_metadat
 
     # Step 8: Write Audit Log
     total_rows = len(valid_rows) + len(invalid_rows)
-    write_audit_log(request_id, routing_metadata, total_rows, len(valid_rows), invalid_rows, dispatch_results, overall_status, missing_email_count)
+    write_audit_log(request_id, routing_metadata, total_rows, len(valid_rows), invalid_rows, dispatch_results, overall_status, missing_email_count, fn_eq_ln_count, dup_email_row_count)

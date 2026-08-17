@@ -10,22 +10,34 @@ REQUIRED_STRING_FIELDS = ["external_id", "event_name", "event_time"]
 def validate_sha256(value: str) -> bool:
     return bool(SHA256_REGEX.match(value))
 
-def validate_identifier_rows(csv_content: str) -> tuple[list[dict], list[dict], int]:
+def validate_identifier_rows(csv_content: str) -> tuple[list[dict], list[dict], int, int, int]:
     """
     Generic identifier presence/format validation, shared across all platforms.
     Row rejected only if every REQUIRED_HASHED_FIELDS entry is missing, or a
     present field fails SHA-256 format. Platform-specific naming (em/ph ->
     EMAIL/PHONE, hashed_email/hashed_phone_number, etc.) is applied downstream
     by each platform's own transform step, not here.
-    Returns (valid_rows, invalid_rows, missing_email_count).
+    Returns (valid_rows, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count).
+    fn_eq_ln_count: rows where fn and ln hash to the same value - signals a
+    source-data or export-script defect upstream of hashing, not something
+    hashing-order or format fixes touch.
+    dup_email_row_count: rows whose em hash appears more than once in the
+    batch - often legitimate repeat customers, flagged for visibility only.
     """
     reader = csv.DictReader(io.StringIO(csv_content))
-    valid_rows, invalid_rows, missing_email_count = [], [], 0
+    valid_rows = []
+    invalid_rows = []
+    missing_email_count = 0
+    fn_eq_ln_count = 0
+    em_seen = {}
+
     for index, row in enumerate(reader):
         values = {field: row.get(field) for field in REQUIRED_HASHED_FIELDS}
+
         if not any(values.values()):
             invalid_rows.append({"row_index": index, "field": "/".join(REQUIRED_HASHED_FIELDS), "reason": "At least one identifier required"})
             continue
+
         row_valid = True
         for field, val in values.items():
             if val and not validate_sha256(val):
@@ -34,10 +46,23 @@ def validate_identifier_rows(csv_content: str) -> tuple[list[dict], list[dict], 
                 break
         if not row_valid:
             continue
+
         if not values.get("em"):
             missing_email_count += 1
+
+        fn, ln = row.get("fn"), row.get("ln")
+        if fn and fn == ln:
+            fn_eq_ln_count += 1
+
+        em = values.get("em")
+        if em:
+            em_seen[em] = em_seen.get(em, 0) + 1
+
         valid_rows.append(row)
-    return valid_rows, invalid_rows, missing_email_count
+
+    dup_email_row_count = sum(count for count in em_seen.values() if count > 1)
+
+    return valid_rows, invalid_rows, missing_email_count, fn_eq_ln_count, dup_email_row_count
 
 def spot_check_rows(sample_rows: list[dict]) -> None:
     """
