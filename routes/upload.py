@@ -5,12 +5,15 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Depends
 from fastapi.responses import JSONResponse
 from fastapi import status
-from sqlalchemy.orm import Session
+# --- TEMP REVERT (Jay, 2026-08-18): approved_accounts DB table not seeded yet.
+# Muted DB-backed account check below, reverted to hardcoded config check.
+# Uncomment this import + the Session/db lines further down once DB is ready.
+# from sqlalchemy.orm import Session
 from core.auth import verify_token
 
 from core.config import settings
 from core.auth import verify_token
-from db.database import get_db
+# from db.database import get_db
 from exceptions import (
     SchemaValidationError,
     HashValidationError,
@@ -21,7 +24,7 @@ from exceptions import (
     FilenameValidationError,
 )
 from services.file_validation import validate_filename
-from services.approved_accounts import is_known_account
+# from services.approved_accounts import is_known_account
 from services.audience_processing import process_meta_upload
 from services.google_ads_processing import process_google_ads_upload
 from services.audit_logging import is_duplicate_batch, register_batch, checkpoint, Checkpoint
@@ -35,7 +38,7 @@ async def upload_audience(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     token: str = Depends(verify_token),
-    db: Session = Depends(get_db),
+    # db: Session = Depends(get_db),  # TEMP REVERT: see note above
 ):
     request_id = str(uuid.uuid4())
     checkpoint(request_id, Checkpoint.FILE_RECEIVED, {"filename": file.filename})
@@ -43,8 +46,13 @@ async def upload_audience(
     # Step 1: Validate Filename (raises FilenameValidationError)
     routing_metadata = validate_filename(file.filename)
     checkpoint(request_id, Checkpoint.FILENAME_VALIDATED, {"filename": file.filename})
-    if not is_known_account(db, routing_metadata.account):
-       raise FilenameValidationError(f"Unknown account: {routing_metadata.account}")
+    # TEMP REVERT (Jay, 2026-08-18): approved_accounts DB table not seeded yet -
+    # reverted to hardcoded settings.approved_accounts until DB is ready.
+    # Original DB-backed check, uncomment when DB is seeded:
+    # if not is_known_account(db, routing_metadata.account):
+    #    raise FilenameValidationError(f"Unknown account: {routing_metadata.account}")
+    if routing_metadata.account not in settings.approved_accounts:
+        raise FilenameValidationError(f"Unknown account: {routing_metadata.account}")
 
     if routing_metadata.action == "replace":
         raise ActionNotImplementedError(
